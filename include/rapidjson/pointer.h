@@ -295,6 +295,21 @@ public:
             return Append(static_cast<SizeType>(token.GetUint64()), allocator);
         }
     }
+		
+	//! Detach last \p n tokens
+	/*!
+	 * @param n 
+	 * @param allocator 
+	 * @return *this
+	 */
+	GenericPointer& Detach(const SizeType& n=1/*, Allocator* allocator = 0*/){
+		if( n <= this->tokenCount_ )
+			this->tokenCount_ -= n;
+		else
+			this->tokenCount_ = 0;
+		return *this;
+	}
+		
 
     //!@name Handling Parse Error
     //@{

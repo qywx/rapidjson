@@ -554,6 +554,18 @@ TEST(Pointer, Append) {
 #endif
 }
 
+TEST(Pointer, Detach){
+    {
+        EXPECT_TRUE(Pointer("/foo/") != Pointer("/foo"));
+        EXPECT_TRUE(Pointer("/foo").Detach(0) == Pointer("/foo"));
+        Pointer p("/foo/1234");
+        p.Detach();
+        EXPECT_TRUE(Pointer("/foo") == p);
+        EXPECT_TRUE(Pointer("/foo/bar/labla/ruu").Detach(3) == Pointer("/foo"));
+        EXPECT_TRUE(Pointer("/foo/bar/labla/ruu").Detach(5) == Pointer());
+    }
+}
+
 TEST(Pointer, Equality) {
     EXPECT_TRUE(Pointer("/foo/0") == Pointer("/foo/0"));
     EXPECT_FALSE(Pointer("/foo/0") == Pointer("/foo/1"));
