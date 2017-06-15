@@ -21,7 +21,9 @@ set(EXAMPLES
     simplereader
     simplepullreader
     simplewriter
-    tutorial)
+    tutorial
+    KeyValueSaxPrinterSimple
+    )
     
 include_directories("../include/")
 
