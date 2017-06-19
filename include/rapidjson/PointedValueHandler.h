@@ -51,24 +51,26 @@ RAPIDJSON_NAMESPACE_BEGIN
 	\endcode
 	*/
 
-	//! Default implementation of PointedValueHandler.
+	//! Default (dummy) implementation of PointedValueHandler concept.
 	/*! This can be used as base class of any pointed reader handler.
 	    The sens of using it is no need to implement all methods of concept. 
-	    Non-overriden (read non-hidden) methods will fall back to method \c Default() 
-	    \note implements PointedValueHandler concept
+	    Non-overriden (read non-hidden) methods will fall back to method \c Default(),
+	    which is also could be overridden-hidden.
 	    \note analogy to BaseReaderHandler
+	    \usage class MyPointedHandler : public 
 	 */
 	template<typename Encoding_ = UTF8<>, typename Derived_ = void>
-	struct BasePointedValueHandler
+	struct DummyPointedValueHandler
 	{
 	public:  // == TYPES == 
 		using Encoding = Encoding_;
 		using Derived = Derived_;
-		using ThisT = BasePointedValueHandler<Encoding,Derived>;
+		using ThisT = DummyPointedValueHandler<Encoding,Derived>;
 		using Ch = typename Encoding::Ch;
 		// If Derived == void -> Override = ThisT, else Override = Derived
 		using Override = typename internal::SelectIf<internal::IsSame<Derived, void>, ThisT, Derived>::Type;
 	public:  // == METHODS ==
+		/// Default is do nothing
 		bool Default(Pointer const& p)                         { (void)p; return true; }
 		bool Null   (Pointer const& p)                         { return static_cast<Override&>(*this).Default(p); }
 		bool Bool   (Pointer const& p, bool b)                 { return static_cast<Override&>(*this).Default(p,b); }
@@ -88,11 +90,11 @@ RAPIDJSON_NAMESPACE_BEGIN
 	};
 
 
-	/// Handler implements usual rapidjson concept.
+	/// Handler implements usual rapidjson concept `rapidjson::Handler`.
 	/// Passes values with pointer to \tparam PointedValueHandler
-	///\tparam PointedValueHandler implements concept PointedValueHandler
+	///\tparam PointedValueHandler : a type implements concept PointedValueHandler
 	///\tparam Encoding
-	template<typename PointedValueHandler /*= BasePointedValueHandler<>*/, typename Encoding = UTF8<>>
+	template<typename PointedValueHandler /*= DummyPointedValueHandler<>*/, typename Encoding = UTF8<>>
 	class KeyValueSaxHandler
 		// No need to inherit `BaseReaderHandler`, we simply repeat it with ALL methods.
 		//: public BaseReaderHandler<Encoding, KeyValueSaxHandler<Encoding,PointedValueHandler>>
@@ -101,6 +103,17 @@ RAPIDJSON_NAMESPACE_BEGIN
 		//using Override = 
 		//		typename internal::SelectIf<internal::IsSame<PointedValueHandler, void>, KeyValueSaxHandler, PointedValueHandler>::Type;
 		using Ch = typename Encoding::Ch;
+	public:
+		KeyValueSaxHandler( PointedValueHandler && pvh /*= {}*/ )
+				: pvh_(pvh)
+		{}
+		/*KeyValueSaxHandler( PointedValueHandler const& pvh )
+				: pvh_(pvh)
+		{}
+		//template< typename = enable_if( type_traits::default_constructable<PointedValueHandler>::type ) >
+		KeyValueSaxHandler()
+				: pvh_{}
+		{}*/
 	public:  // == METHODS ==
 		bool Default()                                          { bool ret = true;                    pointer_.Detach(); return ret; }
 		bool Null()                                             { bool ret = pvh_.Null(pointer_);     pointer_.Detach(); return ret; }
@@ -126,10 +139,58 @@ RAPIDJSON_NAMESPACE_BEGIN
 			return true;
 		}
 	protected:
-		PointedValueHandler pvh_ = {};
+		PointedValueHandler pvh_;
 		Pointer pointer_ = {};
 	};
-
+	
+	
+	/// Attempt to implement Handler, which should be derived.
+	///\usage `class MyPointedValueHandlerImpl : public PointedHandlerBase<UTF8<>,MyPointedValueHandlerImpl>`
+	template< typename Encoding_ = UTF8<>, typename Derived_ = DummyPointedValueHandler<Encoding_> >
+	class PointedHandlerBase
+		// Inherit dummy implementation of `PointedValueHandler` concept 
+		//: DummyPointedValueHandler<Encoding_,Derived_>
+		// No need to inherit `BaseReaderHandler`, we simply repeat it with ALL methods, in other words implement concept `rapidjson::Handler`.
+		//: public BaseReaderHandler<Encoding, KeyValueSaxHandler<Encoding,PointedValueHandler>>
+	{
+	public:  // == TYPES == 
+		using Encoding = Encoding_;
+		using Derived = Derived_;
+		using ThisT = PointedHandlerBase<Encoding,Derived>;
+		using Ch = typename Encoding::Ch;
+		// If Derived was provided Override = Derived, else Override = ThisT 
+		using Override = typename internal::SelectIf<internal::IsSame<Derived, void>, ThisT, Derived>::Type;
+	public:  // == METHODS ==
+		bool Default()                                          { bool ret = override().Default(pointer_);  pointer_.Detach(); return ret; }
+		bool Null()                                             { bool ret = override().Null(pointer_);     pointer_.Detach(); return ret; }
+		bool Bool(bool b)                                       { bool ret = override().Bool(pointer_,b);   pointer_.Detach(); return ret; }
+		bool Int(int i)                                         { bool ret = override().Int(pointer_,i);    pointer_.Detach(); return ret; }
+		bool Uint(unsigned u)                                   { bool ret = override().Uint(pointer_,u);   pointer_.Detach(); return ret; }
+		bool Int64(int64_t i)                                   { bool ret = override().Int64(pointer_,i);  pointer_.Detach(); return ret; }
+		bool Uint64(uint64_t u)                                 { bool ret = override().Uint64(pointer_,u); pointer_.Detach(); return ret; }
+		bool Double(double d)                                   { bool ret = override().Double(pointer_,d); pointer_.Detach(); return ret; }
+		/// enabled via kParseNumbersAsStringsFlag, string is not null-terminated (use length)
+		bool RawNumber(const Ch* str, SizeType len, bool copy)  { bool ret = override().RawNumber(pointer_,str,len,copy); pointer_.Detach(); return ret; }
+		bool String   (const Ch* str, SizeType len, bool copy)  { bool ret = override().String(pointer_,str,len,copy);    pointer_.Detach(); return ret; }
+		
+		bool StartObject()                                      { return override().StartObject(pointer_); }
+		//bool Key(const Ch* str, SizeType len, bool copy) { return static_cast<Override&>(*this).String(str, len, copy); }
+		bool EndObject(SizeType size)                           { bool ret = override().EndObject(pointer_,size); pointer_.Detach(); return ret; }
+		bool StartArray()                                       { return override().StartArray(pointer_); }
+		bool EndArray(SizeType size)                            { bool ret = override().EndArray(pointer_,size); pointer_.Detach(); return ret; }
+	public:	
+		bool Key(const Ch* str, SizeType length, bool copy){
+			(void)copy;
+			pointer_ = pointer_.Append(str,length);  //\todo Ask why this creates new object rather than modify current
+			return true;
+		}
+	public:
+		bool Default(Pointer const& p)                         { (void)p; return true; }
+	public:
+		constexpr Override& override(){ return static_cast<Override&>(*this); }
+	protected:
+		Pointer pointer_ = {};
+	};
 	
 RAPIDJSON_NAMESPACE_END
 

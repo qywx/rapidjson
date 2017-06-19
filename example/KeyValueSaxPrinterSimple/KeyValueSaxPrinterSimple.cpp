@@ -43,7 +43,13 @@ public:
 int main()
 {
 	//const char* json1 = "{ \"greeting\" : \"Hello!\", \"farewell\" : \"bye-bye!\" }";
-	const char* json = "{ \"greeting\" : \"Hello!\", \"farewell\" : \"bye-bye!\", \"foo\" : {} }";
+	//const char* json = "{ \"greeting\" : \"Hello!\", \"farewell\" : \"bye-bye!\", \"foo\" : {} }";
+	char json[] = " { \"hello\" : \"world\", \"t\" : true , \"f\" : false, \"n\": null,"
+			"\"i\":123, \"pi\": 3.1416, \"a\":[-1, 2, 3, 4, \"array\", []], \"skipArrays\":[1, 2, [[[3]]]], "
+			"\"skipObject\":{ \"i\":0, \"t\":true, \"n\":null, \"d\":123.45 }, "
+			"\"skipNested\":[[[[{\"\":0}, {\"\":[-9.87]}]]], [], []], "
+			"\"skipString\":\"zzz\", \"reachedEnd\":null, \"t\":true }";
+	
 	Reader reader;
 	KeyValueSaxHandler<KeyValuePrinter> handler{};
 	StringStream ss(json);

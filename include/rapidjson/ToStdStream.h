@@ -42,6 +42,45 @@ RAPIDJSON_NAMESPACE_BEGIN
 		return os;
 	}
 	
+	/*template <typename ValueT>
+	std::ostream& operator<<( std::ostream &os, ValueT const& v ){
+		switch( v->GetType() ){ 
+			case kNullType:   os << "null";
+			case kFalseType:  os << "false";
+			case kTrueType:   os << "true";
+			case kObjectType: os << "{...}";  //todo recursively
+			case kArrayType:  os << "[...]]";  //todo recursively
+			case kStringType: os << v.GetString();
+			case kNumberType: os << v.GetNumber();
+		}
+		return os;
+	}*/
+	
+	
+	//std::ostream& operator<<( std::ostream &os, Type t ){
+	template<typename _CharT, typename _Traits>
+	std::basic_ostream<_CharT, _Traits>& operator<<( std::basic_ostream<_CharT, _Traits> &os, Type t ){
+		switch(t){
+			//case kNullType  : os << RAPIDJSON_STRINGIFY(kNullType);   break;  //!< null
+			//case kFalseType : os << RAPIDJSON_STRINGIFY(kFalseType);  break;  //!< false
+			//case kTrueType  : os << RAPIDJSON_STRINGIFY(kTrueType);   break;  //!< true
+			//case kObjectType: os << RAPIDJSON_STRINGIFY(kObjectType); break;  //!< object
+			//case kArrayType : os << RAPIDJSON_STRINGIFY(kArrayType);  break;  //!< array 
+			//case kStringType: os << RAPIDJSON_STRINGIFY(kStringType); break;  //!< string
+			//case kNumberType: os << RAPIDJSON_STRINGIFY(kNumberType); break;  //!< number
+			case kNullType  : os << "Null"  ; break;  //!< null
+			case kFalseType : os << "Bool"  ; break;  //!< false
+			case kTrueType  : os << "Bool"  ; break;  //!< true
+			case kObjectType: os << "Object"; break;  //!< object
+			case kArrayType : os << "Array" ; break;  //!< array 
+			case kStringType: os << "String"; break;  //!< string
+			case kNumberType: os << "Number"; break;  //!< number
+		}
+		return os;
+	}
+	
+	
+	
 RAPIDJSON_NAMESPACE_END
 
 #endif // RAPIDJSON_ToStdStream_H_
