@@ -161,17 +161,17 @@ RAPIDJSON_NAMESPACE_BEGIN
 		// If Derived was provided Override = Derived, else Override = ThisT 
 		using Override = typename internal::SelectIf<internal::IsSame<Derived, void>, ThisT, Derived>::Type;
 	public:  // == METHODS ==
-		bool Default()                                          { bool ret = override().Default(pointer_);  pointer_.Detach(); return ret; }
-		bool Null()                                             { bool ret = override().Null(pointer_);     pointer_.Detach(); return ret; }
-		bool Bool(bool b)                                       { bool ret = override().Bool(pointer_,b);   pointer_.Detach(); return ret; }
-		bool Int(int i)                                         { bool ret = override().Int(pointer_,i);    pointer_.Detach(); return ret; }
-		bool Uint(unsigned u)                                   { bool ret = override().Uint(pointer_,u);   pointer_.Detach(); return ret; }
-		bool Int64(int64_t i)                                   { bool ret = override().Int64(pointer_,i);  pointer_.Detach(); return ret; }
-		bool Uint64(uint64_t u)                                 { bool ret = override().Uint64(pointer_,u); pointer_.Detach(); return ret; }
-		bool Double(double d)                                   { bool ret = override().Double(pointer_,d); pointer_.Detach(); return ret; }
+		bool Default()                                          { bool ret = override().Default(pointer_)  ; pointer_.Detach(); return ret; }
+		bool Null()                                             { bool ret = override().Null   (pointer_)  ; pointer_.Detach(); return ret; }
+		bool Bool(bool b)                                       { bool ret = override().Bool   (pointer_,b); pointer_.Detach(); return ret; }
+		bool Int(int i)                                         { bool ret = override().Int    (pointer_,i); pointer_.Detach(); return ret; }
+		bool Uint(unsigned u)                                   { bool ret = override().Uint   (pointer_,u); pointer_.Detach(); return ret; }
+		bool Int64(int64_t i)                                   { bool ret = override().Int64  (pointer_,i); pointer_.Detach(); return ret; }
+		bool Uint64(uint64_t u)                                 { bool ret = override().Uint64 (pointer_,u); pointer_.Detach(); return ret; }
+		bool Double(double d)                                   { bool ret = override().Double (pointer_,d); pointer_.Detach(); return ret; }
 		/// enabled via kParseNumbersAsStringsFlag, string is not null-terminated (use length)
 		bool RawNumber(const Ch* str, SizeType len, bool copy)  { bool ret = override().RawNumber(pointer_,str,len,copy); pointer_.Detach(); return ret; }
-		bool String   (const Ch* str, SizeType len, bool copy)  { bool ret = override().String(pointer_,str,len,copy);    pointer_.Detach(); return ret; }
+		bool String   (const Ch* str, SizeType len, bool copy)  { bool ret = override().String   (pointer_,str,len,copy); pointer_.Detach(); return ret; }
 		
 		bool StartObject()                                      { return override().StartObject(pointer_); }
 		//bool Key(const Ch* str, SizeType len, bool copy) { return static_cast<Override&>(*this).String(str, len, copy); }
