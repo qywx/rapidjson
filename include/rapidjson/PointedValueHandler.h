@@ -104,13 +104,17 @@ RAPIDJSON_NAMESPACE_BEGIN
 		//		typename internal::SelectIf<internal::IsSame<PointedValueHandler, void>, KeyValueSaxHandler, PointedValueHandler>::Type;
 		using Ch = typename Encoding::Ch;
 	public:
-		KeyValueSaxHandler( PointedValueHandler && pvh /*= {}*/ )
+		//KeyValueSaxHandler( PointedValueHandler && pvh /*= {}*/ )
+		//		: pvh_(pvh)
+		//{}
+		//KeyValueSaxHandler( PointedValueHandler & pvh )
+		//		: pvh_(pvh)
+		//{}
+		KeyValueSaxHandler( PointedValueHandler & pvh, Pointer prepointer={} )
 				: pvh_(pvh)
+				, pointer_(prepointer)
 		{}
-		/*KeyValueSaxHandler( PointedValueHandler const& pvh )
-				: pvh_(pvh)
-		{}
-		//template< typename = enable_if( type_traits::default_constructable<PointedValueHandler>::type ) >
+		/*//template< typename = enable_if( type_traits::default_constructable<PointedValueHandler>::type ) >
 		KeyValueSaxHandler()
 				: pvh_{}
 		{}*/
@@ -139,7 +143,7 @@ RAPIDJSON_NAMESPACE_BEGIN
 			return true;
 		}
 	protected:
-		PointedValueHandler pvh_;
+		PointedValueHandler & pvh_;
 		Pointer pointer_ = {};
 	};
 	
