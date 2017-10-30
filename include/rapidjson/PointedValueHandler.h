@@ -16,7 +16,9 @@
 
 #ifndef RAPIDJSON_PointedValueHandler_H_
 #define RAPIDJSON_PointedValueHandler_H_
- 
+#pragma once
+
+
 #include "pointer.h"
 #include "reader.h"
 
@@ -57,7 +59,7 @@ RAPIDJSON_NAMESPACE_BEGIN
 	    Non-overriden (read non-hidden) methods will fall back to method \c Default(),
 	    which is also could be overridden-hidden.
 	    \note analogy to BaseReaderHandler
-	    \usage class MyPointedHandler : public 
+	    \usage class MyPointedHandler : public DummyPointedValueHandler
 	 */
 	template<typename Encoding_ = UTF8<>, typename Derived_ = void>
 	struct DummyPointedValueHandler
@@ -93,7 +95,7 @@ RAPIDJSON_NAMESPACE_BEGIN
 	/// Handler implements usual rapidjson concept `rapidjson::Handler`.
 	/// Passes values with pointer to \tparam PointedValueHandler
 	///\tparam PointedValueHandler : a type implements concept PointedValueHandler
-	///\tparam Encoding
+	///\tparam Encoding  /see rapidjson/encodings.h
 	template<typename PointedValueHandler /*= DummyPointedValueHandler<>*/, typename Encoding = UTF8<>>
 	class KeyValueSaxHandler
 		// No need to inherit `BaseReaderHandler`, we simply repeat it with ALL methods.
