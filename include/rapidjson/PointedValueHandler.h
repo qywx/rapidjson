@@ -97,7 +97,7 @@ RAPIDJSON_NAMESPACE_BEGIN
 	///\tparam PointedValueHandler : a type implements concept PointedValueHandler
 	///\tparam Encoding  /see rapidjson/encodings.h
 	template<typename PointedValueHandler /*= DummyPointedValueHandler<>*/, typename Encoding = UTF8<>>
-	class KeyValueSaxHandler
+	class KeyValueSaxHandler  //HandlerToPointedHandler
 		// No need to inherit `BaseReaderHandler`, we simply repeat it with ALL methods.
 		//: public BaseReaderHandler<Encoding, KeyValueSaxHandler<Encoding,PointedValueHandler>>
 	{
