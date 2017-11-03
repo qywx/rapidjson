@@ -162,7 +162,7 @@ public:
         #undef INDEX
         \endcode
     */
-    GenericPointer(const Token* tokens, size_t tokenCount) : allocator_(), ownAllocator_(), nameBuffer_(), tokens_(const_cast<Token*>(tokens)), tokenCount_(tokenCount), parseErrorOffset_(), parseErrorCode_(kPointerParseErrorNone) {}
+    constexpr GenericPointer(const Token* tokens, size_t tokenCount) : allocator_(), ownAllocator_(), nameBuffer_(), tokens_(const_cast<Token*>(tokens)), tokenCount_(tokenCount), parseErrorOffset_(), parseErrorCode_(kPointerParseErrorNone) {}
 
     //! Copy constructor.
     GenericPointer(const GenericPointer& rhs, Allocator* allocator = 0) : allocator_(allocator), ownAllocator_(), nameBuffer_(), tokens_(), tokenCount_(), parseErrorOffset_(), parseErrorCode_(kPointerParseErrorNone) {
@@ -1050,7 +1050,7 @@ private:
     private:
         OutputStream& os_;
     };
-
+	
     Allocator* allocator_;                  //!< The current allocator. It is either user-supplied or equal to ownAllocator_.
     Allocator* ownAllocator_;               //!< Allocator owned by this Pointer.
     Ch* nameBuffer_;                        //!< A buffer containing all names in tokens.
@@ -1058,6 +1058,10 @@ private:
     size_t tokenCount_;                     //!< Number of tokens in tokens_.
     size_t parseErrorOffset_;               //!< Offset in code unit when parsing fail.
     PointerParseErrorCode parseErrorCode_;  //!< Parsing error code.
+	
+public:
+	template <typename ValueType_, typename Allocator_>
+	friend bool operator<(GenericPointer<ValueType_,Allocator_> const& p1, GenericPointer<ValueType_,Allocator_> const& p2);
 };
 
 //! GenericPointer for Value (UTF-8, default allocator).
