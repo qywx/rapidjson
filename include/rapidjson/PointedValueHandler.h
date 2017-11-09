@@ -121,32 +121,58 @@ RAPIDJSON_NAMESPACE_BEGIN
 				: pvh_{}
 		{}*/
 	public:  // == METHODS ==
-		bool Default()                                          { bool ret = true;                    pointer_.Detach(); return ret; }
-		bool Null()                                             { bool ret = pvh_.Null(pointer_);     pointer_.Detach(); return ret; }
-		bool Bool(bool b)                                       { bool ret = pvh_.Bool(pointer_,b);   pointer_.Detach(); return ret; }
-		bool Int(int i)                                         { bool ret = pvh_.Int(pointer_,i);    pointer_.Detach(); return ret; }
-		bool Uint(unsigned u)                                   { bool ret = pvh_.Uint(pointer_,u);   pointer_.Detach(); return ret; }
-		bool Int64(int64_t i)                                   { bool ret = pvh_.Int64(pointer_,i);  pointer_.Detach(); return ret; }
-		bool Uint64(uint64_t u)                                 { bool ret = pvh_.Uint64(pointer_,u); pointer_.Detach(); return ret; }
-		bool Double(double d)                                   { bool ret = pvh_.Double(pointer_,d); pointer_.Detach(); return ret; }
+		bool Default()                                          { bool ret = true;                    pointerDetach(); return ret; }
+		bool Null()                                             { bool ret = pvh_.Null(pointer_);     pointerDetach(); return ret; }
+		bool Bool(bool b)                                       { bool ret = pvh_.Bool(pointer_,b);   pointerDetach(); return ret; }
+		bool Int(int i)                                         { bool ret = pvh_.Int(pointer_,i);    pointerDetach(); return ret; }
+		bool Uint(unsigned u)                                   { bool ret = pvh_.Uint(pointer_,u);   pointerDetach(); return ret; }
+		bool Int64(int64_t i)                                   { bool ret = pvh_.Int64(pointer_,i);  pointerDetach(); return ret; }
+		bool Uint64(uint64_t u)                                 { bool ret = pvh_.Uint64(pointer_,u); pointerDetach(); return ret; }
+		bool Double(double d)                                   { bool ret = pvh_.Double(pointer_,d); pointerDetach(); return ret; }
 		/// enabled via kParseNumbersAsStringsFlag, string is not null-terminated (use length)
-		bool RawNumber(const Ch* str, SizeType len, bool copy)  { bool ret = pvh_.RawNumber(pointer_,str,len,copy); pointer_.Detach(); return ret; }
-		bool String   (const Ch* str, SizeType len, bool copy)  { bool ret = pvh_.String(pointer_,str,len,copy);    pointer_.Detach(); return ret; }
+		bool RawNumber(const Ch* str, SizeType len, bool copy)  { bool ret = pvh_.RawNumber(pointer_,str,len,copy); pointerDetach(); return ret; }
+		bool String   (const Ch* str, SizeType len, bool copy)  { bool ret = pvh_.String(pointer_,str,len,copy);    pointerDetach(); return ret; }
 		
 		bool StartObject()                                      { return pvh_.StartObject(pointer_); }
 		//bool Key(const Ch* str, SizeType len, bool copy) { return static_cast<Override&>(*this).String(str, len, copy); }
 		bool EndObject(SizeType size)                           { bool ret = pvh_.EndObject(pointer_,size); pointer_.Detach(); return ret; }
-		bool StartArray()                                       { return pvh_.StartArray(pointer_); }
-		bool EndArray(SizeType size)                            { bool ret = pvh_.EndArray(pointer_,size); pointer_.Detach(); return ret; }
+		//bool StartArray()                                       { return pvh_.StartArray(pointer_); }
+		//bool EndArray(SizeType size)                            { bool ret = pvh_.EndArray(pointer_,size); pointer_.Detach(); return ret; }
 		
 		bool Key(const Ch* str, SizeType length, bool copy){
 			(void)copy;
 			pointer_ = pointer_.Append(str,length);  //\todo Ask why this creates new object rather than modify current
 			return true;
 		}
+		
+		bool StartArray(){ 
+			inArray = true;
+			bool ret = pvh_.StartArray(pointer_);
+			pointer_ = pointer_.Append(0);
+			return ret;
+		}
+		bool EndArray(SizeType size){ 
+			inArray = false;
+			bool ret = pvh_.EndArray(pointer_,size); 
+			pointer_.Detach(); 
+			return ret; 
+		}
+		
 	protected:
 		PointedValueHandler & pvh_;
 		Pointer pointer_ = {};
+		bool inArray =false;
+		
+	protected:
+		Pointer & pointerDetach(){
+			if( inArray ){
+				assert( pointer_.GetLastToken().index != kPointerInvalidIndex );  // Make sure we have right index
+				SizeType idx = pointer_.GetLastToken().index+1;
+				pointer_ = pointer_.Detach().Append( idx );  // Detach previous index and attach next. TODO optimize. 1 of ways is to implement operator++ for Pointer::Token.
+			}else
+				pointer_.Detach();
+			return pointer_;
+		}
 	};
 	
 	

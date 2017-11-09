@@ -295,14 +295,14 @@ public:
             return Append(static_cast<SizeType>(token.GetUint64()), allocator);
         }
     }
-		
+	
 	//! Detach last \p n tokens
 	/*!
-	 * @param n 
-	 * @param allocator 
-	 * @return *this
+		\param n 
+		\param allocator 
+		\return *this
 	 */
-	GenericPointer& Detach(const SizeType& n=1/*, Allocator* allocator = 0*/){
+	GenericPointer& Detach( SizeType n=1/*, Allocator* allocator = 0*/){
 		if( n <= this->tokenCount_ )
 			this->tokenCount_ -= n;
 		else
@@ -310,7 +310,7 @@ public:
 		return *this;
 	}
 		
-
+	
     //!@name Handling Parse Error
     //@{
 
@@ -336,7 +336,11 @@ public:
 
     //! Get the number of tokens.
     size_t GetTokenCount() const { return tokenCount_; }
-
+		
+	//! Get the token array (const version only).
+	//const Token* GetLastToken() const { return GetTokens() + (GetTokenCount() -1); }
+	const Token& GetLastToken() const { return GetTokens()[GetTokenCount()-1]; }
+	
     //@}
 
     //!@name Equality/inequality operators
@@ -1059,7 +1063,8 @@ private:
     size_t parseErrorOffset_;               //!< Offset in code unit when parsing fail.
     PointerParseErrorCode parseErrorCode_;  //!< Parsing error code.
 	
-public:
+public:  // by kyb
+	/// operator LESS
 	template <typename ValueType_, typename Allocator_>
 	friend bool operator<(GenericPointer<ValueType_,Allocator_> const& p1, GenericPointer<ValueType_,Allocator_> const& p2);
 };
