@@ -18,6 +18,7 @@
 #include "document.h"
 #include "internal/itoa.h"
 #include <initializer_list>
+#include "internal/constexpr_number_to_string.h"
 
 #ifdef __clang__
 RAPIDJSON_DIAG_PUSH
@@ -117,10 +118,18 @@ public:
 			: name(s)
 			, length(N-1)
 			, index(InvalidIndex)
-		{}	
-		constexpr Token(SizeType index) 
-			: name("i") // fixme here should be sting representation of number
-			, length(1)
+		{}
+		
+		/*// dirty hack. can cause side effects.. 
+		template< SizeType index >
+		constexpr Token(SizeType index)
+			: name(num_to_string<index>::value) // fixme here should be sting representation of number
+			, length(sizeof(num_to_string<index>::value)-1)
+			, index(index)
+		{}*/
+		constexpr Token(SizeType index)
+			: name("index") // fixme here must be sting representation of number
+			, length(sizeof("index")-1)
 			, index(index)
 		{}
     };
