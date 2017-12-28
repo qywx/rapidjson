@@ -17,6 +17,7 @@
 
 #include "document.h"
 #include "internal/itoa.h"
+#include <initializer_list>
 
 #ifdef __clang__
 RAPIDJSON_DIAG_PUSH
@@ -99,14 +100,38 @@ public:
     struct Token {
         const Ch* name;             //!< Name of the token. It has null character at the end but it can contain null character.
         SizeType length;            //!< Length of the name.
-        SizeType index;             //!< A valid array index, if it is not equal to kPointerInvalidIndex.
+        SizeType index = InvalidIndex;             //!< A valid array index, if it is not equal to kPointerInvalidIndex.
+	public:
+		static constexpr SizeType InvalidIndex = kPointerInvalidIndex;
+	public:  // == CTORs ==	
+		Token() = default;
+		
+		/// Transparent constructor. Used by rapidjson internals. Should be enabled automatically (why it does not?).
+		constexpr Token(const Ch* name, SizeType length, SizeType index)
+			: name(name)
+			, length(length)
+			, index(index)
+		{}
+		template <std::size_t N>
+		constexpr Token(char const (&s)[N]) 
+			: name(s)
+			, length(N-1)
+			, index(InvalidIndex)
+		{}	
+		constexpr Token(SizeType index) 
+			: name("i") // fixme here should be sting representation of number
+			, length(1)
+			, index(index)
+		{}
     };
 
     //!@name Constructors and destructor.
     //@{
 
     //! Default constructor.
-    GenericPointer(Allocator* allocator = 0) : allocator_(allocator), ownAllocator_(), nameBuffer_(), tokens_(), tokenCount_(), parseErrorOffset_(), parseErrorCode_(kPointerParseErrorNone) {}
+    GenericPointer(Allocator* allocator = 0) 
+		: allocator_(allocator), ownAllocator_(), nameBuffer_(), tokens_(), tokenCount_(), parseErrorOffset_(), parseErrorCode_(kPointerParseErrorNone) 
+	{}
 
     //! Constructor that parses a string or URI fragment representation.
     /*!
@@ -136,9 +161,9 @@ public:
         \param allocator User supplied allocator for this pointer. If no allocator is provided, it creates a self-owned one.
         \note Slightly faster than the overload without length.
     */
-    GenericPointer(const Ch* source, size_t length, Allocator* allocator = 0) : allocator_(allocator), ownAllocator_(), nameBuffer_(), tokens_(), tokenCount_(), parseErrorOffset_(), parseErrorCode_(kPointerParseErrorNone) {
-        Parse(source, length);
-    }
+    GenericPointer(const Ch* source, size_t length, Allocator* allocator = 0) 
+		: allocator_(allocator), ownAllocator_(), nameBuffer_(), tokens_(), tokenCount_(), parseErrorOffset_(), parseErrorCode_(kPointerParseErrorNone) 
+	{ Parse(source, length); }
 
     //! Constructor with user-supplied tokens.
     /*!
@@ -162,18 +187,51 @@ public:
         #undef INDEX
         \endcode
     */
-    constexpr GenericPointer(const Token* tokens, size_t tokenCount) : allocator_(), ownAllocator_(), nameBuffer_(), tokens_(const_cast<Token*>(tokens)), tokenCount_(tokenCount), parseErrorOffset_(), parseErrorCode_(kPointerParseErrorNone) {}
+    constexpr GenericPointer(const Token* tokens, size_t tokenCount) 
+		: allocator_()
+		, ownAllocator_()
+		, nameBuffer_()
+		, tokens_(const_cast<Token*>(tokens))
+		, tokenCount_(tokenCount)
+		, parseErrorOffset_()
+		, parseErrorCode_(kPointerParseErrorNone) 
+	{}
+	
+	//! Constructor with user-supplied tokens.
+	template< std::size_t N >
+    constexpr GenericPointer( const Token (&tokens)[N] )
+		//: GenericPointer(tokens,N)
+		: allocator_()
+		, ownAllocator_()
+		, nameBuffer_()
+		, tokens_(const_cast<Token*>(tokens))  //(tokens)  //
+		, tokenCount_(N)
+		, parseErrorOffset_()
+		, parseErrorCode_(kPointerParseErrorNone) 
+	{}
+		
+	constexpr GenericPointer( std::initializer_list<Token> ilist )
+		: allocator_()
+		, ownAllocator_()
+		, nameBuffer_()
+		, tokens_(const_cast<Token*>(ilist.begin()))  //(tokens)  //
+		, tokenCount_( ilist.size() )
+		, parseErrorOffset_()
+		, parseErrorCode_(kPointerParseErrorNone)
+	{}
+	
 
     //! Copy constructor.
-    GenericPointer(const GenericPointer& rhs, Allocator* allocator = 0) : allocator_(allocator), ownAllocator_(), nameBuffer_(), tokens_(), tokenCount_(), parseErrorOffset_(), parseErrorCode_(kPointerParseErrorNone) {
-        *this = rhs;
-    }
+    GenericPointer(const GenericPointer& rhs, Allocator* allocator = 0) 
+		: allocator_(allocator), ownAllocator_(), nameBuffer_(), tokens_(), tokenCount_(), parseErrorOffset_(), parseErrorCode_(kPointerParseErrorNone) 
+	{ *this = rhs; }
 
     //! Destructor.
+	//!\Note: non-trivial destructor makes this class non-literal type, and so no constexpr possible. Read more on http://en.cppreference.com/w/cpp/concept/LiteralType
     ~GenericPointer() {
-        if (nameBuffer_)    // If user-supplied tokens constructor is used, nameBuffer_ is nullptr and tokens_ are not deallocated.
-            Allocator::Free(tokens_);
-        RAPIDJSON_DELETE(ownAllocator_);
+	    if (nameBuffer_)    // If user-supplied tokens constructor is used, nameBuffer_ is nullptr and tokens_ are not deallocated.
+			Allocator::Free(tokens_);
+	    RAPIDJSON_DELETE(ownAllocator_);
     }
 
     //! Assignment operator.
