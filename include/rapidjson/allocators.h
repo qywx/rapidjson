@@ -248,7 +248,12 @@ private:
             return false;
     }
 
-    static const int kDefaultChunkCapacity = 64 * 1024; //!< Default chunk capacity.
+    static const int kDefaultChunkCapacity =  //!< Default chunk capacity.
+		#if RAPIDJSON_DefaultChunkCapacity  
+			RAPIDJSON_DefaultChunkCapacity;
+		#else 
+			64 * 1024;
+		#endif
 
     //! Chunk header for perpending to each chunk.
     /*! Chunks are stored as a singly linked list.
