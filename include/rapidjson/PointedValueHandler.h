@@ -131,11 +131,29 @@ RAPIDJSON_NAMESPACE_BEGIN
 		bool Double(double d)                                   { bool ret = pvh_.Double(pointer_,d); pointerDetach(); return ret; }
 		/// enabled via kParseNumbersAsStringsFlag, string is not null-terminated (use length)
 		bool RawNumber(const Ch* str, SizeType len, bool copy)  { bool ret = pvh_.RawNumber(pointer_,str,len,copy); pointerDetach(); return ret; }
-		bool String   (const Ch* str, SizeType len, bool copy)  { bool ret = pvh_.String(pointer_,str,len,copy);    pointerDetach(); return ret; }
+		bool String   (const Ch* str, SizeType len, bool copy)
+		{
+            bool ret = pvh_.String(pointer_,str,len,copy);
+            pointerDetach();
+            return ret;
+        }
 		
-		bool StartObject()                                      { return pvh_.StartObject(pointer_); }
+		bool StartObject()
+		{
+            if( inArray ) inObject_++;
+            return pvh_.StartObject(pointer_);
+        }
 		//bool Key(const Ch* str, SizeType len, bool copy) { return static_cast<Override&>(*this).String(str, len, copy); }
-		bool EndObject(SizeType size)                           { bool ret = pvh_.EndObject(pointer_,size); pointer_.Detach(); return ret; }
+		bool EndObject(SizeType size)
+		{
+            if( inArray )
+                inObject_--;
+
+            pointerDetach();
+
+            bool ret = pvh_.EndObject(pointer_,size);
+            return ret;
+        }
 		//bool StartArray()                                       { return pvh_.StartArray(pointer_); }
 		//bool EndArray(SizeType size)                            { bool ret = pvh_.EndArray(pointer_,size); pointer_.Detach(); return ret; }
 		
@@ -154,7 +172,7 @@ RAPIDJSON_NAMESPACE_BEGIN
 		bool EndArray(SizeType size){ 
 			inArray = false;
 			bool ret = pvh_.EndArray(pointer_,size); 
-			pointer_.Detach(); 
+			pointer_.Detach();
 			return ret; 
 		}
 		
@@ -162,10 +180,10 @@ RAPIDJSON_NAMESPACE_BEGIN
 		PointedValueHandler & pvh_;
 		Pointer pointer_ = {};
 		bool inArray =false;
-		
+		int inObject_ = 0;			// the object inside array [{},{}]
 	protected:
 		Pointer & pointerDetach(){
-			if( inArray ){
+			if( inArray && 0 == inObject_ ){
 				assert( pointer_.GetLastToken().index != kPointerInvalidIndex );  // Make sure we have right index
 				SizeType idx = pointer_.GetLastToken().index+1;
 				pointer_ = pointer_.Detach().Append( idx );  // Detach previous index and attach next. TODO optimize. 1 of ways is to implement operator++ for Pointer::Token.
