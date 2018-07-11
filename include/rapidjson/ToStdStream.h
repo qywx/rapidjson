@@ -18,6 +18,10 @@
 #define RAPIDJSON_ToStdStream_H_
 
 #include "pointer.h"
+//#include "stringbuffer.h"
+#include "ostreamwrapper.h"
+#include "writer.h"
+#include "prettywriter.h"
 #include <iostream>
 
 
@@ -59,7 +63,8 @@ RAPIDJSON_NAMESPACE_BEGIN
 	
 	//std::ostream& operator<<( std::ostream &os, Type t ){
 	template<typename _CharT, typename _Traits>
-	std::basic_ostream<_CharT, _Traits>& operator<<( std::basic_ostream<_CharT, _Traits> &os, Type t ){
+	std::basic_ostream<_CharT, _Traits>& operator<<
+	( std::basic_ostream<_CharT, _Traits> &os, Type t ){
 		switch(t){
 			//case kNullType  : os << RAPIDJSON_STRINGIFY(kNullType);   break;  //!< null
 			//case kFalseType : os << RAPIDJSON_STRINGIFY(kFalseType);  break;  //!< false
@@ -79,6 +84,38 @@ RAPIDJSON_NAMESPACE_BEGIN
 		return os;
 	}
 	
+	template<typename OutputStream>
+	using PrettyWriterWithNanAndInf =
+	PrettyWriter<
+		/*typename OutputStream  */ OutputStream,
+		/*typename SourceEncoding*/ UTF8<>,
+		/*typename TargetEncoding*/ UTF8<>,
+		/*typename StackAllocator*/ CrtAllocator,
+		/*unsigned writeFlags*/     kWriteNanAndInfFlag
+		>;
+		
+	template<typename OutputStream>
+	using WriterWithNanAndInf =
+	Writer<
+		/*typename OutputStream  */ OutputStream,
+		/*typename SourceEncoding*/ UTF8<>,
+		/*typename TargetEncoding*/ UTF8<>,
+		/*typename StackAllocator*/ CrtAllocator,
+		/*unsigned writeFlags*/     kWriteNanAndInfFlag
+		>;
+	
+	
+	template< typename _CharT, typename _Traits  
+			  , typename Encoding, typename Allocator=MemoryPoolAllocator<>, typename StackAllocator=CrtAllocator >
+	std::basic_ostream<_CharT, _Traits>& operator<<
+	//( std::basic_ostream<_CharT, _Traits> &os, Document const& doc ){
+	( std::basic_ostream<_CharT, _Traits> &os, GenericDocument<Encoding,Allocator,StackAllocator> const& doc )
+	{
+		OStreamWrapper osw(os);
+		WriterWithNanAndInf<OStreamWrapper> writer(osw);
+		doc.Accept(writer);
+		return os;
+	}
 	
 	
 RAPIDJSON_NAMESPACE_END
