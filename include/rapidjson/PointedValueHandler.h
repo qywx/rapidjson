@@ -184,7 +184,7 @@ RAPIDJSON_NAMESPACE_BEGIN
 	protected:
 		Pointer & pointerDetach(){
 			if( inArray && 0 == inObject_ ){
-				assert( pointer_.GetLastToken().index != kPointerInvalidIndex );  // Make sure we have right index
+				RAPIDJSON_ASSERT( pointer_.GetLastToken().index != kPointerInvalidIndex );  // Make sure we have right index
 				SizeType idx = pointer_.GetLastToken().index+1;
 				pointer_ = pointer_.Detach().Append( idx );  // Detach previous index and attach next. TODO optimize. 1 of ways is to implement operator++ for Pointer::Token.
 			}else
