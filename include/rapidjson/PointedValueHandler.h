@@ -13,7 +13,6 @@
 // specific language governing permissions and limitations under the License.
 
 #include "rapidjson.h"
-#include <iostream>
 #include "rj/include/rapidjson/stringbuffer.h"
 #ifndef RAPIDJSON_PointedValueHandler_H_
 #define RAPIDJSON_PointedValueHandler_H_
@@ -169,7 +168,6 @@ RAPIDJSON_NAMESPACE_BEGIN
          return ret;
       }
       bool EndArray(SizeType size){ 
-        std::cerr << ">>> size = " << size << std::endl;
         pointer_.Detach();
          inArray_--;
          
@@ -189,7 +187,6 @@ RAPIDJSON_NAMESPACE_BEGIN
       Pointer & pointerDetach(){
           StringBuffer buffer;
         pointer_.Stringify( buffer ); 
-        std::cerr << "inArray_ = " << inArray_ << ", p = " << buffer.GetString() << std::endl;
          
         if( inArray_ && 0 == inObject_ )
         {
