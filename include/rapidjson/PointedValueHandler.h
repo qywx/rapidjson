@@ -13,7 +13,8 @@
 // specific language governing permissions and limitations under the License.
 
 #include "rapidjson.h"
-
+#include <iostream>
+#include "rj/include/rapidjson/stringbuffer.h"
 #ifndef RAPIDJSON_PointedValueHandler_H_
 #define RAPIDJSON_PointedValueHandler_H_
 #pragma once
@@ -140,13 +141,13 @@ RAPIDJSON_NAMESPACE_BEGIN
       
       bool StartObject()
       {
-            if( inArray ) inObject_++;
+            if( inArray_ ) inObject_++;
             return pvh_.StartObject(pointer_);
         }
       //bool Key(const Ch* str, SizeType len, bool copy) { return static_cast<Override&>(*this).String(str, len, copy); }
       bool EndObject(SizeType size)
       {
-            if( inArray )
+            if( inArray_ )
                 inObject_--;
             bool ret = pvh_.EndObject(pointer_,size);
             pointerDetach();
@@ -162,31 +163,43 @@ RAPIDJSON_NAMESPACE_BEGIN
       }
       
       bool StartArray(){ 
-         inArray = true;
+         inArray_ ++;
          bool ret = pvh_.StartArray(pointer_);
          pointer_ = pointer_.Append(0);
          return ret;
       }
       bool EndArray(SizeType size){ 
-         inArray = false;
+        std::cerr << ">>> size = " << size << std::endl;
+        pointer_.Detach();
+         inArray_--;
+         
+        if( inArray_ )
+            pointerDetach();
+
          bool ret = pvh_.EndArray(pointer_,size); 
-         pointer_.Detach();
          return ret; 
       }
       
    protected:
       PointedValueHandler & pvh_;
       Pointer pointer_ = {};
-      bool inArray =false;
+      int inArray_ = 0;
       int inObject_ = 0;			// the object inside array [{},{}]
    protected:
       Pointer & pointerDetach(){
-         if( inArray && 0 == inObject_ ){
+          StringBuffer buffer;
+        pointer_.Stringify( buffer ); 
+        std::cerr << "inArray_ = " << inArray_ << ", p = " << buffer.GetString() << std::endl;
+         
+        if( inArray_ && 0 == inObject_ )
+        {
             RAPIDJSON_ASSERT( pointer_.GetLastToken().index != kPointerInvalidIndex );  // Make sure we have right index
             SizeType idx = pointer_.GetLastToken().index+1;
             pointer_ = pointer_.Detach().Append( idx );  // Detach previous index and attach next. TODO optimize. 1 of ways is to implement operator++ for Pointer::Token.
-         }else
+        }
+        else
             pointer_.Detach();
+         
          return pointer_;
       }
    };
