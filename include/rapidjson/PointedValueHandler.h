@@ -171,8 +171,10 @@ RAPIDJSON_NAMESPACE_BEGIN
         pointer_.Detach();
          inArray_--;
          
-        if( inArray_ )
+        if( inArray_ > 0 )
             pointerDetach();
+        else
+            pointer_.Detach();
 
          bool ret = pvh_.EndArray(pointer_,size); 
          return ret; 
