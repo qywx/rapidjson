@@ -169,15 +169,15 @@ RAPIDJSON_NAMESPACE_BEGIN
       }
       bool EndArray(SizeType size){ 
         pointer_.Detach();
-         inArray_--;
+        inArray_--;
+        bool ret = pvh_.EndArray(pointer_,size);
          
         if( inArray_ > 0 )
             pointerDetach();
         else
             pointer_.Detach();
 
-         bool ret = pvh_.EndArray(pointer_,size); 
-         return ret; 
+        return ret;
       }
       
    protected:
