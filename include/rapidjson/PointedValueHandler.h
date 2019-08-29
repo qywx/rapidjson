@@ -21,6 +21,7 @@
 
 #include "pointer.h"
 #include "reader.h"
+#include <list>
 
 RAPIDJSON_NAMESPACE_BEGIN
 
@@ -140,20 +141,15 @@ RAPIDJSON_NAMESPACE_BEGIN
       
       bool StartObject()
       {
-            if( inArray_ ) inObject_++;
             return pvh_.StartObject(pointer_);
         }
-      //bool Key(const Ch* str, SizeType len, bool copy) { return static_cast<Override&>(*this).String(str, len, copy); }
+
       bool EndObject(SizeType size)
       {
-            if( inArray_ )
-                inObject_--;
             bool ret = pvh_.EndObject(pointer_,size);
             pointerDetach();
             return ret;
         }
-      //bool StartArray()                                       { return pvh_.StartArray(pointer_); }
-      //bool EndArray(SizeType size)                            { bool ret = pvh_.EndArray(pointer_,size); pointer_.Detach(); return ret; }
       
       bool Key(const Ch* str, SizeType length, bool copy){
          (void)copy;
@@ -161,21 +157,24 @@ RAPIDJSON_NAMESPACE_BEGIN
          return true;
       }
       
-      bool StartArray(){ 
-         inArray_ ++;
+      bool StartArray()
+      {
          bool ret = pvh_.StartArray(pointer_);
-         pointer_ = pointer_.Append(0);
+
+         pointer_ = pointer_.Append(0); // "/array/" -> "/array/0/"
+         arrays_.push_back(pointer_);
+
          return ret;
       }
-      bool EndArray(SizeType size){ 
-        pointer_.Detach();
-        inArray_--;
+
+      bool EndArray(SizeType size)
+      {
+        pointer_.Detach(); // "/array/0/" -> "/array/"
+        arrays_.pop_back();
+
         bool ret = pvh_.EndArray(pointer_,size);
-         
-        if( inArray_ > 0 )
-            pointerDetach();
-        else
-            pointer_.Detach();
+
+        pointerDetach();
 
         return ret;
       }
@@ -183,22 +182,24 @@ RAPIDJSON_NAMESPACE_BEGIN
    protected:
       PointedValueHandler & pvh_;
       Pointer pointer_ = {};
-      int inArray_ = 0;
-      int inObject_ = 0;			// the object inside array [{},{}]
+      std::list<Pointer> arrays_;
+
    protected:
-      Pointer & pointerDetach(){
-          StringBuffer buffer;
-        pointer_.Stringify( buffer ); 
-         
-        if( inArray_ && 0 == inObject_ )
-        {
-            RAPIDJSON_ASSERT( pointer_.GetLastToken().index != kPointerInvalidIndex );  // Make sure we have right index
-            SizeType idx = pointer_.GetLastToken().index+1;
-            pointer_ = pointer_.Detach().Append( idx );  // Detach previous index and attach next. TODO optimize. 1 of ways is to implement operator++ for Pointer::Token.
-        }
-        else
-            pointer_.Detach();
-         
+      /**
+       * @brief Elements of JSON Arrays has no own key tokens.
+       * So we add "0/" token to pointer_ for all elements in StartArray(), and remove them in EndArray().
+       * In other cases we add token in Key() and must detach last tokens here.
+       *
+       * Note: all elements in array has '0' index.
+       * This allow check hierarchy and types from MasterDoc, which has only one example element.
+       */
+      Pointer & pointerDetach()
+      {
+         if(arrays_.empty() || arrays_.back() != pointer_)
+         {
+           pointer_.Detach();
+         }
+
          return pointer_;
       }
    };
