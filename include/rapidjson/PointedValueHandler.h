@@ -187,15 +187,20 @@ RAPIDJSON_NAMESPACE_BEGIN
    protected:
       /**
        * @brief Elements of JSON Arrays has no own key tokens.
-       * So we add "0/" token to pointer_ for all elements in StartArray(), and remove them in EndArray().
+       * So we add "0/" token to pointer_ for all elements in StartArray(), update index for every next element, and remove them in EndArray().
        * In other cases we add token in Key() and must detach last tokens here.
-       *
-       * Note: all elements in array has '0' index.
-       * This allow check hierarchy and types from MasterDoc, which has only one example element.
        */
       Pointer & pointerDetach()
       {
-         if(arrays_.empty() || arrays_.back() != pointer_)
+         if(!arrays_.empty() && arrays_.back() == pointer_)
+         {
+           RAPIDJSON_ASSERT( pointer_.GetLastToken().index != kPointerInvalidIndex );  // Make sure we have right index
+           SizeType idx = pointer_.GetLastToken().index+1;
+           pointer_ = pointer_.Detach().Append( idx );  // Detach previous index and attach next. TODO optimize. 1 of ways is to implement operator++ for Pointer::Token.
+           arrays_.pop_back();
+           arrays_.push_back(pointer_);
+         }
+         else
          {
            pointer_.Detach();
          }
